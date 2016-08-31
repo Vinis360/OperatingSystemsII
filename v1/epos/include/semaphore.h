@@ -17,6 +17,7 @@ public:
     void v();
 
 private:
+    
     volatile int _value;
 };
 

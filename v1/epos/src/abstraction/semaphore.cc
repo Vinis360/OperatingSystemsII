@@ -1,7 +1,7 @@
 // EPOS Semaphore Abstraction Implementation
 
+//#include "../../include/semaphore.h"
 #include <semaphore.h>
-
 __BEGIN_SYS
 
 Semaphore::Semaphore(int v): _value(v)
@@ -19,20 +19,29 @@ Semaphore::~Semaphore()
 void Semaphore::p()
 {
     db<Synchronizer>(TRC) << "Semaphore::p(this=" << this << ",value=" << _value << ")" << endl;
-
-    fdec(_value);
-    while(_value < 0)
-        sleep();
+    begin_atomic();
+    if(_value > 0) {
+    	fdec(_value);
+    } else {
+	sleep();
+    }
+    end_atomic();
+        
+    
+    
 }
 
 
 void Semaphore::v()
 {
     db<Synchronizer>(TRC) << "Semaphore::v(this=" << this << ",value=" << _value << ")" << endl;
-
-    finc(_value);
-    if(_value < 1)
-        wakeup();
+    begin_atomic();
+    if(!on_hold.empty()){
+	wakeup();
+    } else {	
+    	finc(_value);
+    } 
+    end_atomic();
 }
 
 __END_SYS

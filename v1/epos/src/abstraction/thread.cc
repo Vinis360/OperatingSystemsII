@@ -17,6 +17,7 @@ Scheduler_Timer * Thread::_timer;
 Thread* volatile Thread::_running;
 Thread::Queue Thread::_ready;
 Thread::Queue Thread::_suspended;
+Thread::Queue Thread::_waiting;
 
 // Methods
 void Thread::constructor_prolog(unsigned int stack_size)
@@ -40,6 +41,7 @@ void Thread::constructor_epilog(const Log_Addr & entry, unsigned int stack_size)
     switch(_state) {
         case RUNNING: break;
         case SUSPENDED: _suspended.insert(&_link); break;
+        case WAITING: _waiting.insert(&_link); break;
         default: _ready.insert(&_link);
     }
 
@@ -60,7 +62,7 @@ Thread::~Thread()
 
     _ready.remove(this);
     _suspended.remove(this);
-
+    _waiting.remove(this);
     unlock();
 
     kfree(_stack);
@@ -160,6 +162,43 @@ void Thread::yield()
         idle();
 
     unlock();
+}
+
+void Thread::sleep(Queue& on_hold){
+    lock();
+    if (!_ready.empty()) {
+        Thread * sleeper = _running;
+        sleeper->_state = WAITING;
+        on_hold.insert(&sleeper->_link);
+        _waiting.insert(&sleeper->_link);
+ 
+        _running = _ready.remove()->object();
+	_running->_state = RUNNING;
+        dispatch(sleeper, _running);
+    } else {
+        idle();
+    }
+  
+    unlock();
+}
+
+void Thread::wakeup(Queue& on_hold){
+    lock();
+    wake(on_hold);
+    unlock();
+}
+void Thread::wakeup_all(Queue& on_hold){
+    lock();
+    while(!on_hold.empty()){
+        wake(on_hold);
+    }
+    unlock();
+}
+
+void Thread::wake(Queue& on_hold){
+    Thread * waking = on_hold.remove()->object();
+    waking->_state = READY;
+    _ready.insert(_waiting.remove(waking));
 }
 
 

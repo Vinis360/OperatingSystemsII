@@ -77,10 +77,14 @@ public:
     void pass();
     void suspend();
     void resume();
-
+    
+    
     static Thread * volatile self() { return running(); }
     static void yield();
     static void exit(int status = 0);
+    static void sleep(Queue&);
+    static void wakeup(Queue&);
+    static void wakeup_all(Queue&);
 
 protected:
     void constructor_prolog(unsigned int stack_size);
@@ -101,7 +105,7 @@ protected:
 
 private:
     static void init();
-
+    static void wake(Queue&);
 protected:
     char * _stack;
     Context * volatile _context;
@@ -111,9 +115,11 @@ protected:
     static Scheduler_Timer * _timer;
 
 private:
+    
     static Thread * volatile _running;
     static Queue _ready;
     static Queue _suspended;
+    static Queue _waiting;
 };
 
 
