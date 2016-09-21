@@ -75,9 +75,23 @@ int Thread::join()
     lock();
 
     db<Thread>(TRC) << "Thread::join(this=" << this << ",state=" << _state << ")" << endl;
+    
+    // Caso ainda haja threads a rodar;
+    if (!_ready.empty()) {
+        Thread * prev = _running;
+        // Coloca a thread atual em estado de espera
+        prev->_state = WAITING;
+        _waiting->insert(prev->_link);
 
-    while(_state != FINISHING)
-        yield(); // implicit unlock()
+        // Escalona a thread de maior prioridade
+        _running = _ready.remove()->object();
+        _running->_state = RUNNING;
+        dispatch(prev, _running);
+    // Caso contrário
+    } else {
+        // Deadlock
+        db<Thread>(TRC) << "Thread::join(this=" << this << ",state=" << _state << ")" << "Inside Else" << endl;    
+    }
 
     unlock();
 
