@@ -81,7 +81,7 @@ int Thread::join()
         Thread * prev = _running;
         // Coloca a thread atual em estado de espera
         prev->_state = WAITING;
-        _waiting->insert(prev->_link);
+        _waiting->insert(&prev->_link);
 
         // Escalona a thread de maior prioridade
         _running = _ready.remove()->object();
@@ -186,10 +186,18 @@ void Thread::exit(int status)
 
     db<Thread>(TRC) << "Thread::exit(status=" << status << ") [running=" << running() << "]" << endl;
 
+    while (!_waiting->empty()) {
+        Thread * next = _waiting->remove()->object();
+        next->_state = READY;
+        _ready.insert(&next->_link);
+    }
+
     while(_ready.empty() && !_suspended.empty())
         idle(); // implicit unlock();
 
     lock();
+
+
 
     if(!_ready.empty()) {
         Thread * prev = _running;
