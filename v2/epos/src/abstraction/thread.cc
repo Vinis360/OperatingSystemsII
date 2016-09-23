@@ -79,7 +79,7 @@ int Thread::join()
     Thread * prev = _running;
     // Coloca a thread atual em estado de espera
     prev->_state = WAITING;
-    _join_queue->insert(&prev->_link);
+    _join_queue.insert(&prev->_link);
     
     while (_ready.empty()) {
         idle(); // Implicit unlock
@@ -186,8 +186,8 @@ void Thread::exit(int status)
 
     db<Thread>(TRC) << "Thread::exit(status=" << status << ") [running=" << running() << "]" << endl;
 
-    while (!running()->_join_queue->empty()) {
-        Thread * next = running()->_join_queue->remove()->object();
+    while (!running()->_join_queue.empty()) {
+        Thread * next = running()->_join_queue.remove()->object();
         next->_state = READY;
         _ready.insert(&next->_link);
     }
