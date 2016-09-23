@@ -75,23 +75,23 @@ int Thread::join()
     lock();
 
     db<Thread>(TRC) << "Thread::join(this=" << this << ",state=" << _state << ")" << endl;
-    
-    // Caso ainda haja threads a rodar;
-    if (!_ready.empty()) {
-        Thread * prev = _running;
-        // Coloca a thread atual em estado de espera
-        prev->_state = WAITING;
-        _waiting->insert(&prev->_link);
 
-        // Escalona a thread de maior prioridade
-        _running = _ready.remove()->object();
-        _running->_state = RUNNING;
-        dispatch(prev, _running);
-    // Caso contrário
-    } else {
-        // Deadlock
-        db<Thread>(TRC) << "Thread::join(this=" << this << ",state=" << _state << ")" << "Inside Else" << endl;    
+    Thread * prev = _running;
+    // Coloca a thread atual em estado de espera
+    prev->_state = WAITING;
+    _join_queue->insert(&prev->_link);
+    
+    while (_ready.empty()) {
+        idle(); // Implicit unlock
     }
+
+    lock();
+
+    // Quando haja threads a rodar;
+    // Escalona a thread de maior prioridade
+    _running = _ready.remove()->object();
+    _running->_state = RUNNING;
+    dispatch(prev, _running);
 
     unlock();
 
@@ -186,8 +186,8 @@ void Thread::exit(int status)
 
     db<Thread>(TRC) << "Thread::exit(status=" << status << ") [running=" << running() << "]" << endl;
 
-    while (!_waiting->empty()) {
-        Thread * next = _waiting->remove()->object();
+    while (!_join_queue->empty()) {
+        Thread * next = _join_queue->remove()->object();
         next->_state = READY;
         _ready.insert(&next->_link);
     }
@@ -196,8 +196,6 @@ void Thread::exit(int status)
         idle(); // implicit unlock();
 
     lock();
-
-
 
     if(!_ready.empty()) {
         Thread * prev = _running;

@@ -111,6 +111,7 @@ protected:
     Context * volatile _context;
     volatile State _state;
     Queue * _waiting;
+    Queue * _join_queue;
     Queue::Element _link;
 
     static Scheduler_Timer * _timer;
