@@ -12,9 +12,9 @@ void foo(Thread* bar) {
 
 int main() {
 	Thread * a[3];
-	a[0] = new Thread(&foo, a[1]);
-	a[1] = new Thread(&foo, a[2]);
-	a[2] = new Thread(&foo, a[0]);
+	a[0] = new Thread(&foo, &a[1]);
+	a[1] = new Thread(&foo, &a[2]);
+	a[2] = new Thread(&foo, &a[0]);
 
 	a[0]->join();
 	cout << "Done" << endl;
