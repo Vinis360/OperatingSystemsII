@@ -3,6 +3,8 @@
 
 using namespace EPOS;
 
+OStream cout;
+
 void foo(Thread* bar) {
 	cout << "Locking " << bar << endl;
 	bar->join();
