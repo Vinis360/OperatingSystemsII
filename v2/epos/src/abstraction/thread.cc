@@ -186,8 +186,8 @@ void Thread::exit(int status)
 
     db<Thread>(TRC) << "Thread::exit(status=" << status << ") [running=" << running() << "]" << endl;
 
-    while (!_join_queue->empty()) {
-        Thread * next = _join_queue->remove()->object();
+    while (!running()->_join_queue->empty()) {
+        Thread * next = running()->_join_queue->remove()->object();
         next->_state = READY;
         _ready.insert(&next->_link);
     }
