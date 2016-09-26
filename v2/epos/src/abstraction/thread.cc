@@ -75,24 +75,25 @@ int Thread::join()
     lock();
 
     db<Thread>(TRC) << "Thread::join(this=" << this << ",state=" << _state << ")" << endl;
-
-    Thread * prev = _running;
-    // Coloca a thread atual em estado de espera
-    prev->_state = WAITING;
-    _join_queue.insert(&prev->_link);
+    if(_state != FINISHING) {
+        Thread * prev = _running;
+        // Coloca a thread atual em estado de espera
+        prev->_state = WAITING;
+        _join_queue.insert(&prev->_link);
     
-    while (_ready.empty()) {
-        idle(); // Implicit unlock
+    
+        while (_ready.empty()) {
+            idle(); // Implicit unlock
+        }
+    
+        lock();
+
+        // Quando haja threads a rodar;
+        // Escalona a thread de maior prioridade
+        _running = _ready.remove()->object();
+        _running->_state = RUNNING;
+        dispatch(prev, _running);
     }
-
-    lock();
-
-    // Quando haja threads a rodar;
-    // Escalona a thread de maior prioridade
-    _running = _ready.remove()->object();
-    _running->_state = RUNNING;
-    dispatch(prev, _running);
-
     unlock();
 
     return *reinterpret_cast<int *>(_stack);
