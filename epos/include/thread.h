@@ -105,6 +105,7 @@ protected:
     static int idle();
 
 private:
+    static Thread * _idle;
     static void init();
 
 protected:
@@ -118,7 +119,7 @@ protected:
     static Scheduler_Timer * _timer;
 
 private:
-    static Thread * _idle;
+   // static Thread * _idle;
     static Thread * volatile _running;
     static Queue _ready;
     static Queue _suspended;

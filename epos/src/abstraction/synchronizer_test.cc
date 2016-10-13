@@ -32,6 +32,7 @@ int consumer()
 
 int main()
 {
+    Thread::yield();
     Thread * cons = new Thread(&consumer);
 
     // producer

@@ -15,10 +15,10 @@ void Thread::init()
     // Letting reschedule() happen during thread creation is harmless, since
     // MAIN is created first and dispatch won't replace it nor by itself
     // neither by IDLE (which has a lower priority)
-    if(preemptive) {
+    if(preemptive)
         _timer = new (kmalloc(sizeof(Scheduler_Timer))) Scheduler_Timer(QUANTUM, time_slicer);
-    }
-        _idle = new Thread(Configuration(READY, LOWEST), &idle());
+ 
+    _idle = new (kmalloc(sizeof(Thread))) Thread(Configuration(READY, LOWEST), &idle);
 }
 
 __END_SYS
