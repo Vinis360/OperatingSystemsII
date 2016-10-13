@@ -45,7 +45,8 @@ public:
     enum {
         HIGH = 0,
         NORMAL = 15,
-        LOW = 31
+        LOW = 31,
+        LOWEST = 63, // used to set priority of thread idle. 2^6-1
     };
 
     // Thread Configuration
@@ -117,6 +118,7 @@ protected:
     static Scheduler_Timer * _timer;
 
 private:
+    static Thread * _idle;
     static Thread * volatile _running;
     static Queue _ready;
     static Queue _suspended;
